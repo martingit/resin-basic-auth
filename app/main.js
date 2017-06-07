@@ -3,6 +3,7 @@ const path = require('path');
 
 const { app, BrowserWindow } = electron;
 
+
 // simple parameters initialization
 const electronConfig = {
   URL_LAUNCHER_TOUCH: process.env.URL_LAUNCHER_TOUCH === '1' ? 1 : 0,
@@ -17,8 +18,12 @@ const electronConfig = {
   URL_LAUNCHER_URL: process.env.URL_LAUNCHER_URL || `file:///${path.join(__dirname, 'data', 'index.html')}`,
   URL_LAUNCHER_ZOOM: parseFloat(process.env.URL_LAUNCHER_ZOOM || 1.0),
   URL_LAUNCHER_OVERLAY_SCROLLBARS: process.env.URL_LAUNCHER_CONSOLE === '1' ? 1 : 0,
+  URL_BASIC_AUTHENTICATION: process.env.URL_BASIC_AUTHENTICATION ? new Buffer(process.env.URL_BASIC_AUTHENTICATION).toString('base64') : '',
+  URL_FILTER: process.env.URL_FILTER
 };
-
+const filter = {
+  urls: [ electronConfig.URL_FILTER ]
+}
 // enable touch events if your device supports them
 if (electronConfig.URL_LAUNCHER_TOUCH) {
   app.commandLine.appendSwitch('--touch-devices');
@@ -56,7 +61,10 @@ app.on('ready', () => {
       overlayScrollbars: !!(electronConfig.URL_LAUNCHER_OVERLAY_SCROLLBARS),
     },
   });
-
+  electron.session.defaultSession.webRequest.onBeforeSendHeaders(filter, (details, callback) => {
+    details.requestHeaders['Authorization'] = 'Basic ' + electronConfig.URL_BASIC_AUTHENTICATION;
+    callback({cancel: false, requestHeaders: details.requestHeaders})
+  })
   window.webContents.on('did-finish-load', () => {
     setTimeout(() => {
       window.show();
@@ -68,7 +76,6 @@ app.on('ready', () => {
   if (electronConfig.URL_LAUNCHER_CONSOLE) {
     window.openDevTools();
   }
-
   // the big red button, here we go
   window.loadURL(electronConfig.URL_LAUNCHER_URL);
 });

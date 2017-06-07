@@ -5,6 +5,7 @@
   "main": "main.js",
   "scripts": {
     "dev": "NODE_ENV=development electron .",
+    "devwin": "$ENV:NODE_ENV=development && electron .",
     "lint": "eslint .",
     "start": "NODE_ENV=production startx ./node_modules/electron/dist/electron ."
   },
